@@ -716,6 +716,11 @@
     });
   }
 
+  function shareFileName(r) {
+    const keys = ['ninjin', 'goma', 'ichigo', 'tamanegi'];
+    return 'hakko-shindan-' + (keys[results.indexOf(r)] || 'dressing') + '.jpg';
+  }
+
   async function makeShareImage(r) {
     // 画像に使う文字のフォントを先に読み込む
     const zenText = 'あなたにぴったりの一本#発酵ドレッシング診断' + r.tags.join('') + ACCOUNT_NAME;
@@ -726,9 +731,9 @@
     ]).catch(() => {});
     const photo = await loadPhoto(r.photo);
     try {
-      return await canvasToResult(drawShareImage(r, photo), 'hakko-dressing-shindan.jpg');
+      return await canvasToResult(drawShareImage(r, photo), shareFileName(r));
     } catch (e) {
-      return await canvasToResult(drawShareImage(r, null), 'hakko-dressing-shindan.jpg'); // 写真が描けない端末では写真なしで
+      return await canvasToResult(drawShareImage(r, null), shareFileName(r)); // 写真が描けない端末では写真なしで
     }
   }
 
@@ -914,15 +919,16 @@
     toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
   }
 
-  // download:true のときは、Android(LINEの外)なら共有画面を出さずにダウンロードする
-  async function saveImage(btn, imagePromise, subText, download) {
+  // doneText があるときは、Android(LINEの外)なら共有画面を出さずにダウンロードして、doneText を表示する
+  // (Androidの共有画面には「画像を保存」がないため)
+  async function saveImage(btn, imagePromise, subText, doneText) {
     if (!imagePromise) return;
     btn.disabled = true;
     try {
       const img = await imagePromise;
-      if (download && isAndroid && !isLineApp) {
+      if (doneText && isAndroid && !isLineApp) {
         downloadImage(img);
-        showToast('スマホに保存しました(「ダウンロード」に入っています)');
+        showToast(doneText);
         return;
       }
       if (navigator.canShare && navigator.canShare({ files: [img.file] })) {
@@ -950,11 +956,13 @@
 
   const shareBtn = document.getElementById('share-btn');
   shareBtn.addEventListener('click', () =>
-    saveImage(shareBtn, shareImage, '保存したら、Instagramのストーリーズや<br>LINEでシェアできます'));
+    saveImage(shareBtn, shareImage, '保存したら、Instagramのストーリーズや<br>LINEでシェアできます',
+      'スマホに保存しました。Instagramのストーリーズなどでシェアしてね'));
 
   const recipeSaveBtn = document.getElementById('recipe-save-btn');
   recipeSaveBtn.addEventListener('click', () =>
-    saveImage(recipeSaveBtn, recipeImage, '保存しておけば、作るときに<br>いつでも見返せます', true));
+    saveImage(recipeSaveBtn, recipeImage, '保存しておけば、作るときに<br>いつでも見返せます',
+      'スマホに保存しました(「ダウンロード」に入っています)'));
 
   document.getElementById('img-close').addEventListener('click', () => imgModal.classList.add('hidden'));
   imgModal.addEventListener('click', e => { if (e.target === imgModal) imgModal.classList.add('hidden'); });
