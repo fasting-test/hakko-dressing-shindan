@@ -141,6 +141,15 @@
   .img-modal-inner {
     background: var(--card); border-radius: 24px 8px 24px 8px; padding: 18px 16px 16px;
     width: 100%; max-width: 360px; text-align: center; animation: rise 0.3s ease;
+    max-height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  .line-note {
+    background: var(--amber-soft); border-radius: 16px 6px 16px 6px; padding: 12px 12px 14px; margin: 0 0 14px;
+  }
+  .line-note-text { font-size: 0.78rem; line-height: 1.7; color: var(--ink); margin: 0 0 10px; }
+  .open-browser {
+    display: block; background: var(--moss); color: #fff; text-decoration: none;
+    border-radius: 18px 6px 18px 6px; padding: 12px; font-size: 0.9rem; font-weight: 700;
   }
   .img-modal-inner .msg { font-size: 0.9rem; font-weight: 700; color: var(--moss-deep); margin: 0 0 4px; }
   .img-modal-inner .msg-sub { font-size: 0.76rem; color: var(--ink-soft); margin: 0 0 12px; line-height: 1.6; }
@@ -260,6 +269,10 @@
 
 <div class="img-modal hidden" id="img-modal">
   <div class="img-modal-inner">
+    <div class="line-note hidden" id="line-note">
+      <p class="line-note-text">LINEの中では保存できないことがあります。<br>そのときは下のボタンでブラウザを開いてね。</p>
+      <a class="open-browser" id="open-browser" href="#">ブラウザで開いて保存する</a>
+    </div>
     <p class="msg">画像を長押しして保存してね</p>
     <p class="msg-sub" id="img-sub"></p>
     <img id="share-img" alt="診断結果の画像">
@@ -421,6 +434,7 @@
   ];
 
   let current = 0;
+  let currentResult = 0; // 今出している結果の番号
   const scores = [0, 0, 0, 0];
   const picks = []; // 選んだ順の記録(同点のときに使う)
 
@@ -472,18 +486,24 @@
     }, 320);
   }
 
-  function showResult() {
+  // forced:URLで結果を指定されたとき(LINEからブラウザに移ったときなど)はその結果を出す
+  function showResult(forced) {
     quizCard.classList.add('hidden');
     resultCard.classList.remove('hidden');
     recipePanel.classList.add('hidden');
     recipeToggle.textContent = 'レシピを見る';
 
     // 一番点数が高いもの。同点のときは、同点の中で最後に選んだ答えを優先する
-    const top = Math.max(...scores);
     let best = 0;
-    for (let i = picks.length - 1; i >= 0; i--) {
-      if (scores[picks[i]] === top) { best = picks[i]; break; }
+    if (typeof forced === 'number') {
+      best = forced;
+    } else {
+      const top = Math.max(...scores);
+      for (let i = picks.length - 1; i >= 0; i--) {
+        if (scores[picks[i]] === top) { best = picks[i]; break; }
+      }
     }
+    currentResult = best;
     const r = results[best];
 
     const photoEl = document.getElementById('result-photo');
@@ -857,6 +877,7 @@
   // ===== 画像の保存・シェア(結果画像・レシピ画像で共通) =====
   // スマホの共有画面が使えればそこに画像を渡す。使えなければ画像を出して長押しで保存してもらう
   const imgModal = document.getElementById('img-modal');
+  const isLineApp = /\bLine\//i.test(navigator.userAgent); // LINEアプリの中のブラウザかどうか
 
   async function saveImage(btn, imagePromise, subText) {
     if (!imagePromise) return;
@@ -873,6 +894,13 @@
       }
       document.getElementById('img-sub').innerHTML = subText;
       document.getElementById('share-img').src = img.url;
+      // LINEの中では長押し保存が効かないことがあるので、同じ結果をブラウザで開くボタンを出す
+      if (isLineApp) {
+        const kind = imagePromise === recipeImage ? '&recipe' : '';
+        document.getElementById('open-browser').href =
+          location.origin + location.pathname + '?openExternalBrowser=1#result=' + currentResult + kind;
+        document.getElementById('line-note').classList.remove('hidden');
+      }
       imgModal.classList.remove('hidden');
     } finally {
       btn.disabled = false;
@@ -901,7 +929,19 @@
     bubbleWrap.appendChild(s);
   }
 
-  renderQuestion();
+  // URLの最後に #result=番号 があれば、質問をとばしてその結果を出す(&recipe ならレシピも開く)
+  const m = location.hash.match(/result=(\d)/);
+  if (m && results[Number(m[1])]) {
+    current = questions.length;
+    renderProgress();
+    showResult(Number(m[1]));
+    if (location.hash.includes('recipe')) {
+      recipePanel.classList.remove('hidden');
+      recipeToggle.textContent = 'レシピを閉じる';
+    }
+  } else {
+    renderQuestion();
+  }
 </script>
 
 </body>
