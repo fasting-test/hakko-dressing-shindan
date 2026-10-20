@@ -262,7 +262,7 @@
     </button>
 
     <div class="insta-box">
-      <p class="insta-lead">ほかの発酵レシピも発信中</p>
+      <p class="insta-lead">ほかの麹レシピも発信中</p>
       <a class="insta-btn" href="https://www.instagram.com/hakko_kurashi_chie/" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor"/>
@@ -692,7 +692,7 @@
     ctx.setLineDash([]);
     ctx.fillStyle = IMG.moss;
     ctx.font = '500 44px "Zen Maru Gothic", sans-serif';
-    ctx.fillText('#発酵ドレッシング診断', cx, 1565);
+    ctx.fillText('#麹ドレッシング診断', cx, 1565);
 
     // アカウント名
     ctx.fillStyle = IMG.ink;
@@ -723,7 +723,7 @@
 
   async function makeShareImage(r) {
     // 画像に使う文字のフォントを先に読み込む
-    const zenText = 'あなたにぴったりの一本#発酵ドレッシング診断' + r.tags.join('') + ACCOUNT_NAME;
+    const zenText = 'あなたにぴったりの一本#麹ドレッシング診断' + r.tags.join('') + ACCOUNT_NAME;
     await Promise.all([
       document.fonts.load('700 84px "Shippori Mincho"', 'あなたにピッタリの麹ドレッシング診断' + r.title),
       document.fonts.load('500 42px "Zen Maru Gothic"', zenText),
